@@ -1,0 +1,44 @@
+version: "1.0.0"
+
+services:
+  server:
+    container_name: server
+    image: node:10.15.1
+    command: bash -c "cd /app && sed -i 's/127.0.0.1/mongodb/g' ./db/index.js && yarn install && npm install -g nodemon && nodemon index.js"
+    volumes:
+      - ./server:/app
+    ports:
+      - 3000:3000
+    networks:
+      - movies-app-network
+    depends_on:
+      - mongodb
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:4.0.4
+    volumes:
+      - ./db:/data/db
+    expose:
+      - 27017
+    networks:
+      - movies-app-network
+  
+  client:
+    container_name: client
+    image: node:10.15.1
+    command: bash -c "cd /app && yarn install && yarn start"
+    volumes:
+      - ./client:/app
+    ports:
+      - 80:8000
+    networks:
+      - movies-app-network
+    depends_on:
+      - mongodb
+      - server
+
+networks:
+  movies-app-network:
+    name: movies-app
+    driver: bridge
